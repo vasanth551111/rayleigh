@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  role          String    @default("STUDENT")
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       Profile?
+  applications  Application[]
+  savedJobs     SavedJob[]
+  resumes       Resume[]
+  interviews    InterviewSession[]
+  progress      Progress[]
+  roadmaps      Roadmap[]
+  notifications Notification[]
+  adminLogs     AdminLog[]
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String?
+  bio         String?
+  skills      String?
+  college     String?
+  experience  String?
+  github      String?
+  linkedin    String?
+  portfolio   String?
+  photoUrl    String?
+  resumeUrl   String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Job {
+  id              String            @id @default(cuid())
+  title           String
+  company         String
+  location        String
+  type            String
+  salary          String?
+  description     String
+  skills          String?
+  remote          Boolean           @default(false)
+  experienceLevel String?
+  recruiterId     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  applications    Application[]
+  savedBy         SavedJob[]
+}
+
+model Application {
+  id        String            @id @default(cuid())
+  jobId     String
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  studentId String
+  student   User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status    String            @default("APPLIED")
+  resumeUrl String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, studentId])
+}
+
+model Resume {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String?  // Changed to String for SQLite simplicity, can store JSON string
+  score     Int?
+  fileUrl   String
+  createdAt DateTime @default(now())
+}
+
+model InterviewSession {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain             String
+  questions          String?  // Changed to String
+  results            String?  // Changed to String
+  score              Int?
+  communicationRating Int?
+  technicalRating    Int?
+  suggestions        String?
+  createdAt          DateTime @default(now())
+}
+
+model LearningCourse {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  videoUrl    String?
+  quizzes     String?    // Changed to String
+  createdAt   DateTime   @default(now())
+  progress    Progress[]
+}
+
+model Progress {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId     String
+  course       LearningCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  percentage   Int            @default(0)
+  streak       Int            @default(0)
+  lastActivity DateTime       @updatedAt
+}
+
+model Roadmap {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String
+  data      String   // Changed to String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  target    String?
+  createdAt DateTime @default(now())
+}

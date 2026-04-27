@@ -28,27 +28,27 @@ export async function POST(req: Request) {
     const systemPrompt = `You are a human interviewer, not an AI. NEVER refer to yourself as an AI, assistant, or language model. Act entirely as a real person.
 ${PERSONALITIES[personality] || PERSONALITIES.friendly}`;
 
-    const difficultyGuide = {
+    const difficultyGuide = ({
       easy: "Ask foundational concepts and simple situational questions.",
       medium: "Ask moderately challenging questions requiring real experience and clear reasoning.",
       hard: "Ask deeply complex questions involving tradeoffs, architectural decisions, edge cases, and leadership challenges.",
-    }[difficulty] || "Ask moderately challenging questions.";
+    } as Record<string, string>)[difficulty] || "Ask moderately challenging questions.";
 
-    const levelGuide = {
+    const levelGuide = ({
       fresher: "The candidate is a fresher. Ask about fundamentals, internship experience, academic projects, and learning mindset.",
       entry: "The candidate has 0-2 years experience. Ask about beginner-to-intermediate concepts and simple project experience.",
       mid: "The candidate has 2-5 years experience. Ask about real-world challenges, ownership, and technical depth.",
       senior: "The candidate has 5+ years experience. Expect architecture, leadership, system design, mentoring, and cross-team impact.",
-    }[level] || "The candidate has mid-level experience.";
+    } as Record<string, string>)[level] || "The candidate has mid-level experience.";
 
-    const typeGuide = {
+    const typeGuide = ({
       hr: "Focus on motivation, culture fit, career goals, salary expectations, team collaboration, and communication.",
       technical: `Focus heavily on ${domain}-specific technical skills, coding concepts, system design, debugging, and best practices.`,
       behavioral: "Focus on STAR-method behavioral questions: teamwork, conflict resolution, failures, leadership, time management.",
       casestudy: "Present business or technical case studies and evaluate structured problem-solving and analytical thinking.",
       managerial: "Focus on leadership style, team management, stakeholder communication, strategic planning, and conflict resolution.",
       mixed: `Blend technical (${domain}), behavioral, and situational questions equally.`,
-    }[interviewType] || "Use a mixed approach.";
+    } as Record<string, string>)[interviewType] || "Use a mixed approach.";
 
     const userPrompt = `You are about to conduct a ${duration}-minute ${interviewType} interview for a ${level}-level ${role} position in the ${industry} industry, specifically for ${domain}.
 
@@ -57,6 +57,10 @@ Start the interview naturally. Generate ONLY a brief greeting. Introduce yoursel
 Keep it strictly to 2-3 sentences. Do NOT ask any real interview questions yet. We will ask the actual interview questions in the next steps.
 
 Respond ONLY as the interviewer in first person. Keep it natural and conversational. Do NOT include any meta-instructions or formatting headers. NEVER say "As an AI" or mention being an AI.`;
+
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ error: "GROQ_API_KEY is not configured" }, { status: 500 });
+    }
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
@@ -114,6 +118,8 @@ Return ONLY a valid JSON object with this structure:
 
   } catch (error: any) {
     console.error("Interview start error:", error);
-    return NextResponse.json({ error: error.message || "Failed to start interview" }, { status: 500 });
+    const status = error.status || 500;
+    const message = error.error?.message || error.message || "Failed to start interview";
+    return NextResponse.json({ error: message }, { status });
   }
 }

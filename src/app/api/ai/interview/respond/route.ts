@@ -63,6 +63,10 @@ Generate your response as the interviewer. It must:
 
 Respond only as the interviewer, in first person, speaking directly to the candidate.`;
 
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ error: "GROQ_API_KEY is not configured" }, { status: 500 });
+    }
+
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -92,6 +96,8 @@ Respond only as the interviewer, in first person, speaking directly to the candi
 
   } catch (error: any) {
     console.error("Interview respond error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const status = error.status || 500;
+    const message = error.error?.message || error.message || "Failed to respond";
+    return NextResponse.json({ error: message }, { status });
   }
 }

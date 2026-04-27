@@ -38,14 +38,8 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <Link href="#features" className="hover:text-primary transition-colors">
-            Features
-          </Link>
           <Link href="#how-it-works" className="hover:text-primary transition-colors">
             How it works
-          </Link>
-          <Link href="#pricing" className="hover:text-primary transition-colors">
-            Pricing
           </Link>
         </nav>
 
@@ -60,10 +54,7 @@ export function Navbar() {
             <span className="sr-only">Toggle theme</span>
           </Button>
           <Link href="/login">
-            <Button variant="ghost">Log in</Button>
-          </Link>
-          <Link href="/signup">
-            <Button className="bg-primary hover:bg-primary/90 text-white">Start Free</Button>
+            <Button className="bg-primary hover:bg-primary/90 text-white">Get Started</Button>
           </Link>
         </div>
 
@@ -87,21 +78,12 @@ export function Navbar() {
           exit={{ opacity: 0, y: -10 }}
           className="md:hidden absolute top-16 left-0 w-full bg-background border-b border-border shadow-lg py-4 px-4 flex flex-col gap-4"
         >
-          <Link href="#features" onClick={() => setMobileMenuOpen(false)}>
-            Features
-          </Link>
           <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>
             How it works
           </Link>
-          <Link href="#pricing" onClick={() => setMobileMenuOpen(false)}>
-            Pricing
-          </Link>
           <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
             <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full">Log in</Button>
-            </Link>
-            <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full bg-primary text-white">Start Free</Button>
+              <Button className="w-full bg-primary text-white">Get Started</Button>
             </Link>
           </div>
         </motion.div>

@@ -7,13 +7,18 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
+  let domain = "Software Engineering";
+  let experienceLevel = "mid-level";
+
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { domain, experienceLevel } = await req.json();
+    const body = await req.json();
+    domain = body.domain || domain;
+    experienceLevel = body.experienceLevel || experienceLevel;
 
     const prompt = `Generate 5 highly personalized technical and behavioral interview questions for a ${experienceLevel} ${domain} position. 
     The questions should be challenging and specific to the role's current industry standards.
@@ -52,7 +57,6 @@ export async function POST(req: Request) {
     return NextResponse.json(questions);
   } catch (error) {
     console.error("AI Interview error:", error);
-    // Fallback to mock data on any error
     return NextResponse.json({
       questions: [
         { question: `Describe your experience with ${domain}.`, category: "General" },

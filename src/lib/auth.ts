@@ -1,24 +1,33 @@
 import { cookies } from "next/headers";
+import { SignJWT, jwtVerify } from "jose";
 
-// SIMULATION MODE: Returning a mock session for development
-export async function getSession() {
-  return {
-    userId: "mock-user-id",
-    email: "test@example.com",
-    role: "STUDENT",
-    name: "Test User"
-  };
-}
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "rayleigh_super_secret_key_123"
+);
 
 export async function signToken(payload: any) {
-  return "mock-token";
+  const token = await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("24h")
+    .sign(JWT_SECRET);
+  return token;
 }
 
 export async function verifyToken(token: string) {
-  return {
-    userId: "mock-user-id",
-    email: "test@example.com",
-    role: "STUDENT",
-    name: "Test User"
-  };
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function getSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) return null;
+
+  return await verifyToken(token);
 }

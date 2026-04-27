@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +58,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function InterviewReport({ report, config, onRetake }: ReportProps) {
   const [expandedQ, setExpandedQ] = useState<number | null>(null);
   const [activeWeek, setActiveWeek] = useState(0);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const radarData = Object.entries(report.scores || {}).map(([key, val]) => ({
     subject: CATEGORY_LABELS[key]?.split(" ")[0] || key,
@@ -91,8 +93,53 @@ export function InterviewReport({ report, config, onRetake }: ReportProps) {
   // Save on mount
   useState(() => { saveToHistory(); });
 
+  const handleExportPDF = async () => {
+    if (!reportRef.current) return;
+    setExporting(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).jsPDF;
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true, backgroundColor: "#0f0f17" });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      let heightLeft = pdfHeight;
+      let position = 0;
+      
+      // Handle multi-page pdf if it's too long
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pdf.internal.pageSize.getHeight();
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pdf.internal.pageSize.getHeight();
+      }
+      
+      pdf.save(`rayleigh-interview-report-${Date.now()}.pdf`);
+    } catch (e) {
+      console.error("PDF export error:", e);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto py-10 px-4 space-y-10">
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={handleExportPDF}
+          disabled={exporting}
+          className="border-primary text-primary hover:bg-primary/10"
+        >
+          {exporting ? <Activity className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          Download Report
+        </Button>
+      </div>
+      <div ref={reportRef} className="space-y-10 bg-background/50 rounded-xl p-2">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
         <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 px-4 py-1.5 rounded-full text-primary text-sm font-bold mb-6">
@@ -352,6 +399,7 @@ export function InterviewReport({ report, config, onRetake }: ReportProps) {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-4">

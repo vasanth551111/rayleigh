@@ -20,11 +20,25 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    // SIMULATION MODE: Redirect directly
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid credentials");
+      }
+
       router.push("/dashboard");
-    }, 500);
+    } catch (err: any) {
+      setError(err.message || "An error occurred during login");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

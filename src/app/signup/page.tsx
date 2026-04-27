@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LocationPicker } from "@/components/ui/location-picker";
 import { ArrowLeft, Target, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("STUDENT");
+  const [locationPreference, setLocationPreference] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -22,11 +24,25 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
 
-    // SIMULATION MODE: Redirect directly
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role, locationPreference }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to sign up");
+      }
+
       router.push("/dashboard");
-    }, 500);
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,6 +102,13 @@ export default function SignupPage() {
                 className="h-11"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Location Preferences (Multiple allowed)</Label>
+              <LocationPicker 
+                selectedLocations={locationPreference ? locationPreference.split('|').filter(Boolean) : []} 
+                onChange={(locs) => setLocationPreference(locs.join('|'))}
               />
             </div>
 

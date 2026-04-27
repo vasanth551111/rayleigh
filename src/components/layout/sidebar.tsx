@@ -13,11 +13,12 @@ import {
   Bell, 
   User, 
   Settings,
-  LogOut,
-  Sparkles
+  LogOut
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+
+import { useSession } from "@/hooks/use-session";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -29,6 +30,13 @@ const navItems = [
   { name: "Learning Hub", href: "/dashboard/learning", icon: GraduationCap },
 ];
 
+const recruiterNavItems = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Post a Job", href: "/dashboard/recruiter/post-job", icon: Briefcase },
+  { name: "My Listings", href: "/dashboard/recruiter/listings", icon: FileText },
+  { name: "Candidate Search", href: "/dashboard/recruiter/candidates", icon: User },
+];
+
 const secondaryNavItems = [
   { name: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: "3" },
   { name: "Profile", href: "/dashboard/profile", icon: User },
@@ -37,6 +45,9 @@ const secondaryNavItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useSession();
+
+  const currentNavItems = user?.role === "RECRUITER" ? recruiterNavItems : navItems;
 
   return (
     <div className="w-64 h-screen border-r border-border bg-card/50 backdrop-blur-xl flex flex-col fixed left-0 top-0 z-40 hidden md:flex">
@@ -53,7 +64,7 @@ export function Sidebar() {
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3 mt-2">
           Main Menu
         </div>
-        {navItems.map((item) => {
+        {currentNavItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href}>
@@ -102,16 +113,7 @@ export function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-border">
-        <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-4 border border-primary/20 mb-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
-            <Sparkles className="h-4 w-4 text-primary" />
-          </div>
-          <h4 className="font-semibold text-sm mb-1">Upgrade to Pro</h4>
-          <p className="text-xs text-muted-foreground mb-3">Unlock unlimited AI interviews.</p>
-          <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-8">
-            Upgrade Now
-          </Button>
-        </div>
+
 
         <Link href="/">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 cursor-pointer">

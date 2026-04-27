@@ -56,14 +56,14 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-4 pt-4"
               >
-                <Link href="/signup">
+                <Link href="/login">
                   <Button size="lg" className="w-full sm:w-auto text-lg h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/25">
-                    Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                    Get Started <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="#demo">
+                <Link href="/login">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg h-14 px-8 rounded-full bg-background/50 backdrop-blur-sm border-border">
-                    Watch Demo
+                    Start Interview Practice
                   </Button>
                 </Link>
               </motion.div>
@@ -157,59 +157,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing */}
-        <section id="pricing" className="py-24 bg-muted/30">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">Invest in your career with a plan that fits your needs.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 max-w-4xl mx-auto gap-8">
-              {/* Free Tier */}
-              <div className="glass-card rounded-3xl p-8 flex flex-col relative overflow-hidden">
-                <h3 className="text-2xl font-bold mb-2">Starter</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-extrabold">$0</span>
-                  <span className="text-muted-foreground">/mo</span>
-                </div>
-                <p className="text-muted-foreground mb-6">Perfect for preparing for your first interview.</p>
-                <ul className="space-y-4 mb-8 flex-1">
-                  {["3 AI Mock Interviews/month", "Basic Resume Analysis", "Standard Feedback", "Community Access"].map((f, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button variant="outline" className="w-full py-6 rounded-xl border-primary text-primary hover:bg-primary/10">Get Started</Button>
-              </div>
 
-              {/* Pro Tier */}
-              <div className="glass-card rounded-3xl p-8 flex flex-col relative overflow-hidden border-primary/50 shadow-[0_0_40px_-15px_rgba(139,92,246,0.3)]">
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-accent" />
-                <div className="absolute top-4 right-4 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20">
-                  MOST POPULAR
-                </div>
-                <h3 className="text-2xl font-bold mb-2">Pro</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-extrabold">$19</span>
-                  <span className="text-muted-foreground">/mo</span>
-                </div>
-                <p className="text-muted-foreground mb-6">For serious job seekers wanting an edge.</p>
-                <ul className="space-y-4 mb-8 flex-1">
-                  {["Unlimited Mock Interviews", "Advanced Resume Optimization", "Detailed Confidence Coaching", "Custom Skill Roadmaps", "AI Voice Trainer"].map((f, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-accent" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full py-6 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/25">Upgrade to Pro</Button>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* CTA */}
         <section className="py-32 relative overflow-hidden">
@@ -217,9 +165,9 @@ export default function Home() {
           <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to crack your next interview?</h2>
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">Join thousands of successful candidates who landed their dream roles using Rayleigh.</p>
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="lg" className="h-16 px-10 text-lg bg-foreground text-background hover:bg-foreground/90 rounded-full">
-                Get Started for Free <ArrowRight className="ml-2 h-5 w-5" />
+                Get Started <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </div>

@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      name: user.name,
     });
 
     const cookieStore = await cookies();
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
         id: user.id,
         email: user.email,
         role: user.role,
-        name: user.profile?.name,
+        name: user.name,
       },
     });
   } catch (error: any) {

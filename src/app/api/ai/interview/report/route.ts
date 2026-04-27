@@ -92,6 +92,10 @@ Return ONLY valid JSON in this EXACT structure:
   "summaryParagraph": "<2-3 sentence honest summary of the candidate's overall performance in this session>"
 }`;
 
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ error: "GROQ_API_KEY is not configured" }, { status: 500 });
+    }
+
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -111,6 +115,8 @@ Return ONLY valid JSON in this EXACT structure:
 
   } catch (error: any) {
     console.error("Interview report error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const status = error.status || 500;
+    const message = error.error?.message || error.message || "Failed to generate report";
+    return NextResponse.json({ error: message }, { status });
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
@@ -9,24 +9,31 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const profile = await prisma.profile.findUnique({
-      where: { userId: session.userId as string },
-      include: {
-        user: {
-          select: {
-            email: true,
-            role: true,
-          },
-        },
-      },
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId as string },
+      include: { profile: true },
     });
 
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(profile);
+    return NextResponse.json({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      bio: user.profile?.bio,
+      locationPreference: user.profile?.locationPreference,
+      skills: user.profile?.skills,
+      experience: user.profile?.experience,
+      projects: user.profile?.projects,
+      certifications: user.profile?.certifications,
+      githubUrl: user.profile?.githubUrl,
+      linkedinUrl: user.profile?.linkedinUrl,
+      resumeUrl: user.profile?.resumeUrl,
+    });
   } catch (error) {
+    console.error("Profile GET error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -39,26 +46,45 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { name, bio, skills, college, experience, github, linkedin, portfolio, photoUrl } = body;
+    const { name, bio, locationPreference, skills, experience, projects, certifications, githubUrl, linkedinUrl } = body;
 
-    const profile = await prisma.profile.update({
+    // Update User name
+    if (name) {
+      await prisma.user.update({
+        where: { id: session.userId as string },
+        data: { name },
+      });
+    }
+
+    // Update or create Profile
+    const profile = await prisma.profile.upsert({
       where: { userId: session.userId as string },
-      data: {
-        name,
+      update: {
         bio,
+        locationPreference,
         skills,
-        college,
-        experience,
-        github,
-        linkedin,
-        portfolio,
-        photoUrl,
+        experience: typeof experience === 'string' ? experience : JSON.stringify(experience),
+        projects: typeof projects === 'string' ? projects : JSON.stringify(projects),
+        certifications: typeof certifications === 'string' ? certifications : JSON.stringify(certifications),
+        githubUrl,
+        linkedinUrl,
+      },
+      create: {
+        userId: session.userId as string,
+        bio,
+        locationPreference,
+        skills,
+        experience: typeof experience === 'string' ? experience : JSON.stringify(experience),
+        projects: typeof projects === 'string' ? projects : JSON.stringify(projects),
+        certifications: typeof certifications === 'string' ? certifications : JSON.stringify(certifications),
+        githubUrl,
+        linkedinUrl,
       },
     });
 
-    return NextResponse.json(profile);
+    return NextResponse.json({ ...profile, name });
   } catch (error) {
-    console.error("Profile update error:", error);
+    console.error("Profile PUT error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

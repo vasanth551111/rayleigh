@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { TrendingUp, Target, Award, Brain } from "lucide-react";
+import { TrendingUp, Target, Award, Brain, Loader2 } from "lucide-react";
 
 const performanceData = [
   { month: 'Jan', score: 65 },
@@ -30,11 +30,32 @@ const skillData = [
 
 export default function ProgressPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // eslint-disable-next-line
   useEffect(() => {
     setIsMounted(true);
+    fetch("/api/dashboard/stats")
+      .then(r => r.json())
+      .then(d => { if (d.stats) setStats(d.stats); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const statCards = [
+    { title: "ATS Resume Score", value: `${stats?.atsScore ?? 0}/100`, icon: Target, color: "text-primary" },
+    { title: "Interviews Completed", value: `${stats?.interviews ?? 0}`, icon: Award, color: "text-accent" },
+    { title: "Top Skill", value: "React & UI", icon: Brain, color: "text-emerald-500" },
+    { title: "Applications", value: `${stats?.applications ?? 0}`, icon: TrendingUp, color: "text-cyan-500" },
+  ];
 
   return (
     <div className="space-y-8 pb-10">
@@ -44,12 +65,7 @@ export default function ProgressPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { title: "Average Score", value: "82%", icon: Target, color: "text-primary" },
-          { title: "Interviews Completed", value: "24", icon: Award, color: "text-accent" },
-          { title: "Top Skill", value: "React & UI", icon: Brain, color: "text-emerald-500" },
-          { title: "Growth Rate", value: "+15%", icon: TrendingUp, color: "text-cyan-500" }
-        ].map((stat, i) => (
+        {statCards.map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card className="glass-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">

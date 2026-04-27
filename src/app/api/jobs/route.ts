@@ -7,8 +7,28 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q") || "";
     const type = searchParams.get("type") || "";
-    const location = searchParams.get("location") || "";
-    const remote = searchParams.get("remote") === "true";
+    let location = searchParams.get("location") || "";
+    let remote = searchParams.get("remote") === "true";
+
+    // Use user's location preference if explicit location is not provided
+    if (!location && !remote) {
+      const session = await getSession();
+      if (session) {
+        const user = await prisma.user.findUnique({
+          where: { id: session.userId as string },
+          include: { profile: true },
+        });
+        
+        const locPref = user?.profile?.locationPreference;
+        if (locPref) {
+          if (locPref.toLowerCase().includes("remote")) {
+            remote = true;
+          } else {
+            location = locPref;
+          }
+        }
+      }
+    }
 
     const jobs = await prisma.job.findMany({
       where: {
@@ -21,7 +41,14 @@ export async function GET(req: Request) {
             ],
           },
           type ? { type } : {},
-          location ? { location: { contains: location, mode: "insensitive" } } : {},
+          location ? {
+            OR: location.split('|').flatMap(fullLoc => {
+              const parts = fullLoc.split(',').map(p => p.trim());
+              return parts.map(part => ({
+                location: { contains: part, mode: "insensitive" }
+              }));
+            })
+          } : {},
           remote ? { remote: true } : {},
         ],
       },
@@ -30,6 +57,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(jobs);
   } catch (error) {
+    console.error("Fetch jobs error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -42,7 +70,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, company, location, type, salary, description, skills, remote, experienceLevel } = body;
+    const { title, company, location, type, salary, description, skills, remote } = body;
 
     const job = await prisma.job.create({
       data: {
@@ -54,13 +82,13 @@ export async function POST(req: Request) {
         description,
         skills,
         remote,
-        experienceLevel,
-        recruiterId: session.userId as string,
+        postedById: session.userId as string,
       },
     });
 
     return NextResponse.json(job);
   } catch (error) {
+    console.error("Create job error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

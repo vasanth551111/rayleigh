@@ -13,8 +13,13 @@ export async function POST(
     }
 
     const { id } = await params;
-    const body = await req.json();
-    const { resumeUrl } = body;
+    let resumeUrl = null;
+    try {
+      const body = await req.json();
+      resumeUrl = body?.resumeUrl;
+    } catch (e) {
+      // Body is optional
+    }
 
     // Check if already applied
     const existing = await prisma.application.findFirst({

@@ -7,6 +7,7 @@ const libsql = createClient({
   url: "file:C:/Users/vasan/rayleigh/dev.db",
 });
 
+// @ts-ignore - version mismatch workaround between libsql client and prisma adapter
 const adapter = new PrismaLibSql(libsql);
 
 const globalForPrisma = global as any;

@@ -2,15 +2,18 @@
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, MessageSquare, Bell } from "lucide-react";
+import { Menu, Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { AskAIWidget } from "@/components/chat/ask-ai-widget";
+import Link from "next/link";
+import { SessionProvider, useSession } from "@/hooks/use-session";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useSession();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -33,6 +36,34 @@ export default function DashboardLayout({
       console.error(err);
     }
   };
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setSearchOpen(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        setSearchResults(data);
+        setSearchOpen(true);
+      } catch (err) {
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +89,27 @@ export default function DashboardLayout({
             <Input 
               placeholder="Search interviews, skills, jobs..." 
               className="pl-9 bg-muted/50 border-none h-10 focus-visible:ring-1 focus-visible:ring-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => { if (searchResults.length > 0) setSearchOpen(true); }}
+              onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
             />
+            {searchOpen && (
+              <div className="absolute top-12 left-0 w-full bg-background border border-border rounded-xl shadow-lg z-50 py-2 max-h-96 overflow-y-auto">
+                {searching ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((r: any) => (
+                    <Link key={r.id} href={r.link} className="flex flex-col p-3 hover:bg-muted/50 transition-colors">
+                      <span className="text-sm font-bold">{r.title}</span>
+                      <span className="text-xs text-muted-foreground">{r.subtitle} • {r.type}</span>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">No results found</div>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-6">
@@ -72,15 +123,49 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-4">
-            <div className="text-sm text-right hidden lg:block">
-              <div className="font-medium">John Doe</div>
-              <div className="text-muted-foreground text-xs">Frontend Developer</div>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent p-[2px] cursor-pointer hover:scale-105 transition-transform">
-              <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
-                <span className="font-bold text-sm">JD</span>
+              <div className="text-sm text-right hidden lg:block">
+                <div className="font-medium">
+                  {loading ? "Loading..." : user?.name || "User"}
+                </div>
+                <div className="text-muted-foreground text-xs uppercase">
+                  {loading ? "..." : user?.role || "STUDENT"}
+                </div>
               </div>
-            </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent p-[2px] cursor-pointer hover:scale-105 transition-transform">
+                    <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
+                      <span className="font-bold text-sm">
+                        {loading ? "?" : (user?.name?.substring(0, 2).toUpperCase() || "US")}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user?.name || "User"}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+                      Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={async () => {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    router.push("/login");
+                  }}>
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
@@ -91,13 +176,15 @@ export default function DashboardLayout({
         </main>
       </div>
 
-      {/* Floating AI Coach Button */}
-      <Button 
-        className="fixed bottom-6 right-6 h-14 rounded-full px-6 shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-white z-50 animate-bounce hover:animate-none group"
-      >
-        <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-        Ask Rayleigh
-      </Button>
+      <AskAIWidget />
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </SessionProvider>
   );
 }
